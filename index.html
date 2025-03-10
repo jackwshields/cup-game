@@ -158,7 +158,7 @@
             <h1>Food Emoji Catcher</h1>
             <p>Catch as many food emojis as you can in 40 seconds!</p>
             <p>Move the cup left and right using your mouse or finger.</p>
-            <p>Every 10 caught emojis, your cup will upgrade!</p>
+            <p>Every 5 caught emojis, your cup will upgrade!</p>
             <button id="start-btn">Start Game</button>
         </div>
         
@@ -282,7 +282,7 @@
         }
         
         function checkLevelUp() {
-            const newLevel = Math.floor(score / 10) + 1;
+            const newLevel = Math.floor(score / 5) + 1;
             if (newLevel > level && newLevel <= cupEmojis.length) {
                 level = newLevel;
                 levelElement.textContent = level;
