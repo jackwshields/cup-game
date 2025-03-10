@@ -149,14 +149,14 @@
     <div id="game-container">
         <div id="score-container">Caught: <span id="score">0</span></div>
         <div id="missed-container">Missed: <span id="missed">0</span></div>
-        <div id="timer-container">Time: <span id="timer">30</span>s</div>
+        <div id="timer-container">Time: <span id="timer">40</span>s</div>
         <div id="level-container">Level: <span id="level">1</span></div>
         
         <div id="cup">🧃</div>
         
         <div id="start-screen">
             <h1>Food Emoji Catcher</h1>
-            <p>Catch as many food emojis as you can in 30 seconds!</p>
+            <p>Catch as many food emojis as you can in 40 seconds!</p>
             <p>Move the cup left and right using your mouse or finger.</p>
             <p>Every 10 caught emojis, your cup will upgrade!</p>
             <button id="start-btn">Start Game</button>
@@ -202,7 +202,7 @@
         
         let score = 0;
         let missed = 0;
-        let timeLeft = 30;
+        let timeLeft = 40;
         let level = 1;
         let gameRunning = false;
         let gameInterval;
@@ -222,7 +222,7 @@
             startScreen.style.display = 'none';
             score = 0;
             missed = 0;
-            timeLeft = 30;
+            timeLeft = 40;
             level = 1;
             gameRunning = true;
             scoreElement.textContent = score;
