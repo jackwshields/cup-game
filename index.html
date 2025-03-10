@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Food Emoji Catcher</title>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            font-family: Arial, sans-serif;
+            background-color: #f0f8ff;
+            touch-action: none;
+        }
+        #game-container {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+            overflow: hidden;
+        }
+        .emoji {
+            position: absolute;
+            font-size: 40px;
+            user-select: none;
+        }
+        #cup {
+            position: absolute;
+            bottom: 20px;
+            width: 160px;
+            height: 120px;
+            user-select: none;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            transform: translateX(-80px);
+            font-size: 120px;
+            line-height: 120px;
+        }
+        #score-container {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            font-size: 24px;
+            font-weight: bold;
+            color: #333;
+            background-color: rgba(255, 255, 255, 0.7);
+            padding: 10px;
+            border-radius: 10px;
+        }
+        #timer-container {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            font-size: 24px;
+            font-weight: bold;
+            color: #333;
+            background-color: rgba(255, 255, 255, 0.7);
+            padding: 10px;
+            border-radius: 10px;
+        }
+        #missed-container {
+            position: absolute;
+            top: 80px;
+            left: 20px;
+            font-size: 24px;
+            font-weight: bold;
+            color: #f44336;
+            background-color: rgba(255, 255, 255, 0.7);
+            padding: 10px;
+            border-radius: 10px;
+        }
+        #level-container {
+            position: absolute;
+            top: 80px;
+            right: 20px;
+            font-size: 24px;
+            font-weight: bold;
+            color: #9c27b0;
+            background-color: rgba(255, 255, 255, 0.7);
+            padding: 10px;
+            border-radius: 10px;
+        }
+        #game-over {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: rgba(255, 255, 255, 0.9);
+            padding: 30px;
+            border-radius: 15px;
+            text-align: center;
+            display: none;
+        }
+        #play-again-btn {
+            margin-top: 20px;
+            padding: 10px 20px;
+            font-size: 18px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        #play-again-btn:hover {
+            background-color: #45a049;
+        }
+        #start-screen {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: rgba(255, 255, 255, 0.9);
+            padding: 30px;
+            border-radius: 15px;
+            text-align: center;
+        }
+        #start-btn {
+            margin-top: 20px;
+            padding: 10px 20px;
+            font-size: 18px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        #start-btn:hover {
+            background-color: #45a049;
+        }
+        .level-up {
+            position: absolute;
+            font-size: 36px;
+            font-weight: bold;
+            color: #9c27b0;
+            text-align: center;
+            width: 100%;
+            top: 50%;
+            animation: levelUpAnimation 1s forwards;
+            opacity: 0;
+        }
+        @keyframes levelUpAnimation {
+            0% { transform: scale(0.5); opacity: 0; }
+            50% { transform: scale(1.2); opacity: 1; }
+            100% { transform: scale(1); opacity: 0; }
+        }
+    </style>
+</head>
+<body>
+    <div id="game-container">
+        <div id="score-container">Caught: <span id="score">0</span></div>
+        <div id="missed-container">Missed: <span id="missed">0</span></div>
+        <div id="timer-container">Time: <span id="timer">30</span>s</div>
+        <div id="level-container">Level: <span id="level">1</span></div>
+        
+        <div id="cup">🧃</div>
+        
+        <div id="start-screen">
+            <h1>Food Emoji Catcher</h1>
+            <p>Catch as many food emojis as you can in 30 seconds!</p>
+            <p>Move the cup left and right using your mouse or finger.</p>
+            <p>Every 10 caught emojis, your cup will upgrade!</p>
+            <button id="start-btn">Start Game</button>
+        </div>
+        
+        <div id="game-over">
+            <h1>Game Over!</h1>
+            <h2>Food Caught: <span id="final-score">0</span></h2>
+            <h2>Food Missed: <span id="final-missed">0</span></h2>
+            <h2>Highest Level: <span id="final-level">1</span></h2>
+            <button id="play-again-btn">Play Again</button>
+        </div>
+    </div>
+
+    <script>
+        const gameContainer = document.getElementById('game-container');
+        const cup = document.getElementById('cup');
+        const scoreElement = document.getElementById('score');
+        const missedElement = document.getElementById('missed');
+        const timerElement = document.getElementById('timer');
+        const levelElement = document.getElementById('level');
+        const gameOverScreen = document.getElementById('game-over');
+        const finalScoreElement = document.getElementById('final-score');
+        const finalMissedElement = document.getElementById('final-missed');
+        const finalLevelElement = document.getElementById('final-level');
+        const playAgainBtn = document.getElementById('play-again-btn');
+        const startScreen = document.getElementById('start-screen');
+        const startBtn = document.getElementById('start-btn');
+        
+        // Different cup emojis for each level
+        const cupEmojis = [
+            '🧃', // Level 1: Juice box
+            '🥤', // Level 2: Cup with straw
+            '🍶', // Level 3: Sake bottle
+            '🥛', // Level 4: Glass of milk
+            '🧋', // Level 5: Bubble tea
+            '🍹', // Level 6: Tropical drink
+            '🍸', // Level 7: Cocktail glass
+            '🍷', // Level 8: Wine glass
+            '🥂', // Level 9: Champagne
+            '🏆'  // Level 10: Trophy
+        ];
+        
+        let score = 0;
+        let missed = 0;
+        let timeLeft = 30;
+        let level = 1;
+        let gameRunning = false;
+        let gameInterval;
+        let timerInterval;
+        let emojis = [];
+        
+        const foodEmojis = [
+            '🍎', '🍌', '🍇', '🍓', '🍕', '🍔', '🍦', '🍩', '🍪', '🍫', 
+            '🍭', '🍉', '🍍', '🥝', '🍒', '🥐', '🥨', '🍗', '🥗', '🌮'
+        ];
+        
+        function getRandomEmoji() {
+            return foodEmojis[Math.floor(Math.random() * foodEmojis.length)];
+        }
+        
+        function startGame() {
+            startScreen.style.display = 'none';
+            score = 0;
+            missed = 0;
+            timeLeft = 30;
+            level = 1;
+            gameRunning = true;
+            scoreElement.textContent = score;
+            missedElement.textContent = missed;
+            timerElement.textContent = timeLeft;
+            levelElement.textContent = level;
+            cup.textContent = cupEmojis[0]; // Set initial cup
+            
+            // Remove any existing emojis
+            document.querySelectorAll('.emoji').forEach(e => e.remove());
+            emojis = [];
+            
+            gameInterval = setInterval(createEmoji, 1000);
+            timerInterval = setInterval(updateTimer, 1000);
+        }
+        
+        function updateTimer() {
+            timeLeft--;
+            timerElement.textContent = timeLeft;
+            
+            if (timeLeft <= 0) {
+                endGame();
+            }
+        }
+        
+        function createEmoji() {
+            const emoji = document.createElement('div');
+            emoji.className = 'emoji';
+            emoji.textContent = getRandomEmoji();
+            
+            const xPos = Math.random() * (gameContainer.clientWidth - 40);
+            emoji.style.left = xPos + 'px';
+            emoji.style.top = '-40px';
+            
+            gameContainer.appendChild(emoji);
+            
+            const emojiObj = {
+                element: emoji,
+                x: xPos,
+                y: -40,
+                speed: 2 + Math.random() * 3,
+                missed: false
+            };
+            
+            emojis.push(emojiObj);
+        }
+        
+        function showLevelUpAnimation() {
+            const levelUpMsg = document.createElement('div');
+            levelUpMsg.className = 'level-up';
+            levelUpMsg.textContent = `LEVEL UP! 🎉 Level ${level}`;
+            gameContainer.appendChild(levelUpMsg);
+            
+            setTimeout(() => {
+                gameContainer.removeChild(levelUpMsg);
+            }, 1000);
+        }
+        
+        function checkLevelUp() {
+            const newLevel = Math.floor(score / 10) + 1;
+            if (newLevel > level && newLevel <= cupEmojis.length) {
+                level = newLevel;
+                levelElement.textContent = level;
+                cup.textContent = cupEmojis[level - 1];
+                showLevelUpAnimation();
+            }
+        }
+        
+        function updateGame() {
+            if (!gameRunning) return;
+            
+            const cupRect = {
+                x: parseFloat(cup.style.left || 0),
+                y: window.innerHeight - 120,
+                width: 160,
+                height: 120
+            };
+            
+            for (let i = emojis.length - 1; i >= 0; i--) {
+                const emoji = emojis[i];
+                emoji.y += emoji.speed;
+                emoji.element.style.top = emoji.y + 'px';
+                
+                // Check if emoji is caught
+                if (emoji.y + 40 >= cupRect.y && 
+                    emoji.y <= cupRect.y + cupRect.height &&
+                    emoji.x + 20 >= cupRect.x - 60 && 
+                    emoji.x + 20 <= cupRect.x + 100) {
+                    
+                    // Emoji is caught
+                    gameContainer.removeChild(emoji.element);
+                    emojis.splice(i, 1);
+                    score++;
+                    scoreElement.textContent = score;
+                    
+                    // Check if level up is needed
+                    checkLevelUp();
+                    
+                    // Create a quick animation effect
+                    const captureEffect = document.createElement('div');
+                    captureEffect.textContent = '+1';
+                    captureEffect.style.position = 'absolute';
+                    captureEffect.style.color = '#4CAF50';
+                    captureEffect.style.fontWeight = 'bold';
+                    captureEffect.style.fontSize = '24px';
+                    captureEffect.style.left = (cupRect.x + 40) + 'px';
+                    captureEffect.style.top = (cupRect.y - 20) + 'px';
+                    captureEffect.style.transition = 'all 0.5s ease-out';
+                    captureEffect.style.opacity = '1';
+                    gameContainer.appendChild(captureEffect);
+                    
+                    setTimeout(() => {
+                        captureEffect.style.opacity = '0';
+                        captureEffect.style.transform = 'translateY(-20px)';
+                        
+                        setTimeout(() => {
+                            gameContainer.removeChild(captureEffect);
+                        }, 500);
+                    }, 10);
+                    
+                    continue;
+                }
+                
+                // Remove emojis that fall off the screen and count as missed
+                if (emoji.y > window.innerHeight && !emoji.missed) {
+                    emoji.missed = true; // Mark as missed to avoid counting multiple times
+                    missed++;
+                    missedElement.textContent = missed;
+                    
+                    // Create a miss animation effect
+                    const missEffect = document.createElement('div');
+                    missEffect.textContent = 'MISSED!';
+                    missEffect.style.position = 'absolute';
+                    missEffect.style.color = '#f44336';
+                    missEffect.style.fontWeight = 'bold';
+                    missEffect.style.fontSize = '20px';
+                    missEffect.style.left = emoji.x + 'px';
+                    missEffect.style.top = (window.innerHeight - 30) + 'px';
+                    missEffect.style.transition = 'all 0.5s ease-out';
+                    missEffect.style.opacity = '1';
+                    gameContainer.appendChild(missEffect);
+                    
+                    setTimeout(() => {
+                        missEffect.style.opacity = '0';
+                        
+                        setTimeout(() => {
+                            gameContainer.removeChild(missEffect);
+                        }, 500);
+                    }, 10);
+                    
+                    gameContainer.removeChild(emoji.element);
+                    emojis.splice(i, 1);
+                }
+            }
+            
+            requestAnimationFrame(updateGame);
+        }
+        
+        function endGame() {
+            gameRunning = false;
+            clearInterval(gameInterval);
+            clearInterval(timerInterval);
+            
+            finalScoreElement.textContent = score;
+            finalMissedElement.textContent = missed;
+            finalLevelElement.textContent = level;
+            gameOverScreen.style.display = 'block';
+        }
+        
+        // Mouse/touch controls
+        function moveHandler(event) {
+            if (!gameRunning) return;
+            
+            let xPos;
+            if (event.type.startsWith('touch')) {
+                xPos = event.touches[0].clientX;
+            } else {
+                xPos = event.clientX;
+            }
+            
+            cup.style.left = xPos + 'px';
+        }
+        
+        gameContainer.addEventListener('mousemove', moveHandler);
+        gameContainer.addEventListener('touchmove', moveHandler);
+        
+        // Start and restart game
+        startBtn.addEventListener('click', () => {
+            startGame();
+            requestAnimationFrame(updateGame);
+        });
+        
+        playAgainBtn.addEventListener('click', () => {
+            gameOverScreen.style.display = 'none';
+            startGame();
+            requestAnimationFrame(updateGame);
+        });
+    </script>
+</body>
+</html>
